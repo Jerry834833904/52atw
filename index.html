@@ -5,12 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Jerry AI</title>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js">
-document.addEventListener("keydown",event=>{
-  if(event.key==="Escape" && isMessageSelectionMode)cancelMessageSelection();
-});
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
 
@@ -557,6 +552,13 @@ textarea{flex:1;resize:none;max-height:160px;min-height:28px;min-width:0;backgro
 </div>
 
 <script>
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape" && typeof isMessageSelectionMode!=="undefined" && isMessageSelectionMode){
+    cancelMessageSelection();
+  }
+});
+
+
 const WORKER_URL = "https://jerry123.834833904.workers.dev";
 const CHAT_WORKER_URL = WORKER_URL;
 const MEDIA_WORKER_URL = WORKER_URL;
@@ -640,12 +642,11 @@ const selectedMessages=new Set();
 
 if(!currentId || !conversations.find(c=>c.id===currentId)) createConversation();
 
+let pricingConfig=null;
+
 updateChatModelUI();
 applyVideoModelLimits();
 updateModeUI();
-if(getFormalToken())loadPricingConfig();
-refreshFormalAccount();
-checkFormalLoginStatus();
 renderChatList();
 renderMessages();
 
@@ -782,7 +783,6 @@ function selectChatModel(model){
 }
 
 
-let pricingConfig=null;
 
 async function loadPricingConfig(){
   try{
@@ -1228,7 +1228,21 @@ const FORMAL_API="https://jerry123.834833904.workers.dev";
 const FORMAL_TOKEN_KEY="jerry_formal_token";
 const FORMAL_USER_KEY="jerry_formal_user";
 const FORMAL_DEVICE_KEY="jerry_formal_device_id";
+
 let formalAuthMode="login";
+
+const formalLoginTabEl=document.getElementById("formalLoginTab");
+const formalRegisterTabEl=document.getElementById("formalRegisterTab");
+const formalNameRowEl=document.getElementById("formalNameRow");
+const formalEmailCodeRowEl=document.getElementById("formalEmailCodeRow");
+const formalAccountLabelEl=document.getElementById("formalAccountLabel");
+const formalEmailEl=document.getElementById("formalEmail");
+const formalPasswordEl=document.getElementById("formalPassword");
+const formalNameEl=document.getElementById("formalName");
+const formalEmailCodeEl=document.getElementById("formalEmailCode");
+const formalEmailButtonEl=document.getElementById("formalEmailButton");
+const formalAuthSubmitEl=document.getElementById("formalAuthSubmit");
+
 let formalSessionChecking=false;
 
 function createFormalDeviceId(){
@@ -1300,15 +1314,17 @@ function openFormalPage(name){
 function closeFormalPage(){document.querySelectorAll(".formal-page").forEach(page=>page.classList.remove("show"))}
 
 function switchFormalAuth(mode){
-  formalAuthMode=mode;
-  const registering=mode==="register";
-  formalLoginTab.classList.toggle("active",!registering);
-  formalRegisterTab.classList.toggle("active",registering);
-  formalNameRow.style.display=registering?"flex":"none";
-  formalEmailCodeRow.style.display=registering?"flex":"none";
-  formalAccountLabel.textContent="邮箱";
-  formalEmail.placeholder="请输入邮箱";
-  formalAuthSubmit.textContent=registering?"注册":"登录";
+  formalAuthMode=mode==="register"?"register":"login";
+  const registering=formalAuthMode==="register";
+
+  formalLoginTabEl?.classList.toggle("active",!registering);
+  formalRegisterTabEl?.classList.toggle("active",registering);
+
+  if(formalNameRowEl)formalNameRowEl.style.display=registering?"flex":"none";
+  if(formalEmailCodeRowEl)formalEmailCodeRowEl.style.display=registering?"flex":"none";
+  if(formalAccountLabelEl)formalAccountLabelEl.textContent="邮箱";
+  if(formalEmailEl)formalEmailEl.placeholder="请输入邮箱";
+  if(formalAuthSubmitEl)formalAuthSubmitEl.textContent=registering?"注册":"登录";
 }
 
 async function formalApi(path,options={}){
@@ -1323,7 +1339,8 @@ async function formalApi(path,options={}){
     throw new Error("无法连接登录服务器，请确认后端已部署，并刷新网页后重试");
   }
   const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
-  if(path!=="/api/auth/login"&&path!=="/api/auth/register"&&path!=="/api/auth/email/send"){
+  const isPublicAuthPath=path.startsWith("/api/auth/");
+  if(!isPublicAuthPath){
     if(handleFormalUnauthorized(response,data))throw new Error(data.error||"请重新登录");
   }
   if(!response.ok||data.ok===false){
@@ -1462,57 +1479,101 @@ async function checkFormalLoginStatus(){
 
 let formalEmailCountdown=0,formalEmailTimer=null;
 async function sendFormalEmailCode(){
-  const email=String(formalEmail.value||"").trim().toLowerCase();
+  const email=String(formalEmailEl?.value||"").trim().toLowerCase();
   if(!/^\S+@\S+\.\S+$/.test(email))return alert("请输入有效邮箱");
-  formalEmailButton.disabled=true;
-  formalEmailButton.textContent="发送中…";
+
+  if(formalEmailButtonEl){
+    formalEmailButtonEl.disabled=true;
+    formalEmailButtonEl.textContent="发送中…";
+  }
+
   try{
     const data=await formalApi("/api/auth/email/send",{
       method:"POST",
       body:JSON.stringify({email})
     });
+
     alert(data.message||"验证码已发送，请检查邮箱");
     formalEmailCountdown=60;
     clearInterval(formalEmailTimer);
+
     formalEmailTimer=setInterval(()=>{
       formalEmailCountdown--;
-      formalEmailButton.textContent=formalEmailCountdown>0?`${formalEmailCountdown}秒后重发`:"获取验证码";
-      formalEmailButton.disabled=formalEmailCountdown>0;
+      if(formalEmailButtonEl){
+        formalEmailButtonEl.textContent=formalEmailCountdown>0?`${formalEmailCountdown}秒后重发`:"获取验证码";
+        formalEmailButtonEl.disabled=formalEmailCountdown>0;
+      }
       if(formalEmailCountdown<=0)clearInterval(formalEmailTimer);
     },1000);
   }catch(err){
-    formalEmailButton.disabled=false;
-    formalEmailButton.textContent="获取验证码";
+    if(formalEmailButtonEl){
+      formalEmailButtonEl.disabled=false;
+      formalEmailButtonEl.textContent="获取验证码";
+    }
     alert(err.message);
   }
 }
 
 async function submitFormalAuth(){
-  const account=formalEmail.value.trim().toLowerCase();
-  const password=formalPassword.value;
-  const name=formalName.value.trim();
-  const emailCode=String(formalEmailCode?.value||"").trim();
+  const account=String(formalEmailEl?.value||"").trim().toLowerCase();
+  const password=String(formalPasswordEl?.value||"");
+  const name=String(formalNameEl?.value||"").trim();
+  const emailCode=String(formalEmailCodeEl?.value||"").trim();
+
   if(!/^\S+@\S+\.\S+$/.test(account))return alert("请输入有效邮箱");
   if(formalAuthMode==="register"&&!/^\d{6}$/.test(emailCode)){
     return alert("请输入6位邮箱验证码");
   }
   if(password.length<8)return alert("密码至少8位");
-  formalAuthSubmit.disabled=true;
-  formalAuthSubmit.textContent="处理中…";
+
+  if(formalAuthSubmitEl){
+    formalAuthSubmitEl.disabled=true;
+    formalAuthSubmitEl.textContent="处理中…";
+  }
+
   try{
     const path=formalAuthMode==="register"?"/api/auth/register":"/api/auth/login";
     const deviceId=getFormalDeviceId();
     const payload=formalAuthMode==="register"
       ? {email:account,emailCode,password,name,deviceId}
       : {account,password,deviceId};
-    const data=await formalApi(path,{method:"POST",body:JSON.stringify(payload)});
+
+    const data=await formalApi(path,{
+      method:"POST",
+      body:JSON.stringify(payload)
+    });
+
+    if(!data?.token||!data?.user){
+      throw new Error("登录服务器返回数据不完整");
+    }
+
     localStorage.setItem(FORMAL_TOKEN_KEY,data.token);
     localStorage.setItem(FORMAL_USER_KEY,JSON.stringify(data.user));
     refreshFormalAccount();
+
+    // 登录成功后再加载价格和同步历史，不影响登录本身。
+    Promise.resolve().then(()=>loadPricingConfig()).catch(()=>{});
+    Promise.resolve().then(()=>syncLocalChatHistoryToAccount()).catch(()=>{});
+
     alert(formalAuthMode==="register"?"注册成功":"登录成功");
-  }catch(err){alert(err.message)}
-  finally{formalAuthSubmit.disabled=false;formalAuthSubmit.textContent=formalAuthMode==="register"?"注册":"登录"}
+    closeFormalPage();
+  }catch(err){
+    alert(err?.message||"登录失败");
+  }finally{
+    if(formalAuthSubmitEl){
+      formalAuthSubmitEl.disabled=false;
+      formalAuthSubmitEl.textContent=formalAuthMode==="register"?"注册":"登录";
+    }
+  }
 }
+
+
+document.getElementById("formalPassword")?.addEventListener("keydown",event=>{
+  if(event.key==="Enter")submitFormalAuth();
+});
+document.getElementById("formalEmailCode")?.addEventListener("keydown",event=>{
+  if(event.key==="Enter")submitFormalAuth();
+});
 
 function getFormalUser(){
   try{return JSON.parse(localStorage.getItem(FORMAL_USER_KEY)||"null")}catch{return null}
@@ -3134,6 +3195,17 @@ function toggleSidebar(force){
   const sidebar=document.getElementById("sidebar");
   if(typeof force==="boolean")sidebar.classList.toggle("show",force);
   else sidebar.classList.toggle("show");
+}
+
+// ===== 最终初始化：此时所有 const / let / function 已完成定义 =====
+try{
+  refreshFormalAccount();
+  checkFormalLoginStatus();
+  if(getFormalToken()){
+    loadPricingConfig().catch(error=>console.warn("价格加载失败：",error));
+  }
+}catch(error){
+  console.error("Jerry AI 初始化失败：",error);
 }
 </script>
 </body>

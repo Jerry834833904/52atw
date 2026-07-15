@@ -5,40 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jerry AI 管理后台</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f6f7f9;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial}
-button,input,select{font:inherit}
-.wrap{max-width:1100px;margin:auto;padding:22px}
-h1{margin:0 0 18px;font-size:30px}
-.card{background:#fff;border:1px solid #e3e5e8;border-radius:18px;padding:18px;margin-bottom:16px}
-.row{display:flex;gap:10px;flex-wrap:wrap}
-.row>*{flex:1;min-width:180px}
-input,select{width:100%;border:1px solid #d8dce3;border-radius:12px;padding:12px;background:#fff}
-button{border:1px solid #d8dce3;background:#fff;border-radius:12px;padding:11px 15px;cursor:pointer}
-button.primary{background:#111;color:#fff;border-color:#111}
-button.danger{background:#b42318;color:#fff;border-color:#b42318}
-button.small{padding:8px 10px;font-size:13px}
-.muted{color:#6b7280;font-size:13px;line-height:1.6}
-.hidden{display:none}
-.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap}
-.toolbar input{min-width:260px;flex:1}
-.user{display:grid;grid-template-columns:minmax(220px,2fr) 100px 120px 280px;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #eee}
-.user:last-child{border-bottom:0}
-.email{font-weight:750;word-break:break-all}
-.balance{font-weight:850;font-size:18px}
-.actions{display:flex;gap:7px;flex-wrap:wrap}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
-.modal.show{display:flex}
-.modal-card{background:#fff;width:min(560px,100%);max-height:90vh;overflow:auto;border-radius:20px;padding:20px}
-.tabs{display:flex;gap:8px;margin-bottom:14px}
-.tab{flex:1}
-.tab.active{background:#111;color:#fff;border-color:#111}
-.section-title{font-size:20px;font-weight:800;margin:0 0 12px}
-@media(max-width:820px){
-  .user{grid-template-columns:1fr}
-  .wrap{padding:12px}
-}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;background:#f6f7f9;color:#111}
+.wrap{max-width:980px;margin:auto;padding:24px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:18px;margin-bottom:16px}
+h1{margin:0 0 18px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:180px}
+input,select,button{font:inherit;border-radius:12px;padding:11px 12px;border:1px solid #d8dce3;background:#fff}
+button{cursor:pointer}.primary{background:#111;color:#fff;border-color:#111}.danger{background:#b42318;color:#fff;border-color:#b42318}
+.muted{color:#6b7280;font-size:13px}.hidden{display:none}
+.user{display:grid;grid-template-columns:minmax(170px,2fr) 1fr 110px 130px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
+.user:last-child{border-bottom:0}.email{font-weight:700;word-break:break-all}.balance{font-weight:800}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}.toolbar input{flex:1;min-width:220px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}
+.modal-card{background:#fff;width:min(520px,100%);border-radius:20px;padding:20px}
+@media(max-width:700px){.user{grid-template-columns:1fr}.wrap{padding:14px}}
 </style>
 </head>
 <body>
@@ -46,305 +24,189 @@ button.small{padding:8px 10px;font-size:13px}
   <h1>Jerry AI 管理后台</h1>
 
   <div id="loginCard" class="card">
-    <div class="section-title">管理员登录</div>
+    <h3>管理员登录</h3>
     <div class="row">
-      <input id="adminUsername" value="Jerry" placeholder="管理员账号">
-      <input id="adminPassword" type="password" value="123456" placeholder="管理员密码">
+      <input id="username" type="text" placeholder="管理员账号" value="Jerry">
+      <input id="password" type="password" placeholder="密码">
     </div>
-    <button class="primary" style="margin-top:12px" onclick="adminLogin()">登录</button>
-    <div class="muted" style="margin-top:10px">
-      初始账号：Jerry　初始密码：123456。首次登录后请立即修改。
-    </div>
+    <button class="primary" style="margin-top:12px" onclick="login()">登录</button>
+    <div class="muted" style="margin-top:10px">默认管理员账号：Jerry。首次登录后请在 Cloudflare Worker 变量中修改管理员密码。</div>
   </div>
 
-  <div id="panel" class="hidden">
-    <div class="card topbar">
-      <div>
-        <div style="font-weight:800">当前管理员：<span id="currentAdmin">Jerry</span></div>
-        <div class="muted">可管理用户额度、重置用户密码、修改管理员账号和密码。</div>
-      </div>
-      <div class="actions">
-        <button onclick="openAdminSettings()">修改管理员账号/密码</button>
-        <button onclick="adminLogout()">退出</button>
-      </div>
-    </div>
-
+  <div id="adminPanel" class="hidden">
     <div class="card">
       <div class="toolbar">
-        <input id="search" placeholder="搜索用户邮箱、昵称或用户ID">
-        <button class="primary" onclick="loadUsers()">搜索</button>
-        <button onclick="clearSearch()">全部用户</button>
+        <input id="search" placeholder="搜索邮箱、昵称或用户ID">
+        <button onclick="loadUsers()">搜索用户</button>
+        <button onclick="loadUsers(true)">刷新</button>
+        <button onclick="showAllChats()">查看全部聊天记录</button>
+        <button onclick="logout()">退出</button>
       </div>
     </div>
+    <div id="usersCard" class="card">
+      <div id="users"></div>
+    </div>
 
-    <div class="card">
-      <div id="users"><div class="muted">正在加载用户...</div></div>
+    <div id="allChatsCard" class="card hidden">
+      <div class="toolbar" style="margin-bottom:12px">
+        <input id="allChatsSearch" placeholder="搜索邮箱、聊天内容或模型">
+        <button onclick="loadAllChats()">搜索记录</button>
+        <button onclick="showUsersPanel()">返回余额管理</button>
+      </div>
+      <div class="muted" style="margin-bottom:10px">管理员可以查看所有登录邮箱保存的聊天记录。旧版本本地聊天需用户至少打开一次新版网页并保持登录，系统会自动同步到后台。</div>
+      <div id="allChatsList"></div>
     </div>
   </div>
 </div>
 
-<div id="userModal" class="modal">
+<div id="modal" class="modal">
   <div class="modal-card">
-    <div class="section-title" id="userModalTitle">管理用户</div>
-    <div id="userModalEmail" class="muted"></div>
-
-    <div class="tabs" style="margin-top:16px">
-      <button id="balanceTab" class="tab active" onclick="switchUserTab('balance')">管理额度</button>
-      <button id="passwordTab" class="tab" onclick="switchUserTab('password')">重置密码</button>
+    <h3 id="modalTitle">修改余额</h3>
+    <div class="muted" id="modalEmail"></div>
+    <div class="row" style="margin-top:14px">
+      <select id="mode">
+        <option value="adjust">增加 / 扣除金额</option>
+        <option value="set">直接设置余额</option>
+      </select>
+      <input id="value" type="number" step="0.01" placeholder="金额，例如 50 或 -10">
     </div>
-
-    <div id="balanceSection">
-      <div class="row">
-        <select id="balanceMode">
-          <option value="adjust">增加 / 扣除额度</option>
-          <option value="set">直接设置总额度</option>
-        </select>
-        <input id="balanceValue" type="number" step="0.01" placeholder="例如 100 或 -20">
-      </div>
-      <input id="balanceNote" style="margin-top:10px" placeholder="备注，例如：支付宝充值100元">
-      <button class="primary" style="width:100%;margin-top:12px" onclick="submitBalance()">确认修改额度</button>
+    <input id="note" style="width:100%;margin-top:10px" placeholder="备注，例如：支付宝充值 50 元">
+    <div class="row" style="margin-top:14px">
+      <button onclick="closeModal()">取消</button>
+      <button class="primary" onclick="submitBalance()">确认修改</button>
     </div>
-
-    <div id="passwordSection" class="hidden">
-      <input id="newUserPassword" type="password" placeholder="输入用户新密码，至少8位">
-      <button class="danger" style="width:100%;margin-top:12px" onclick="resetUserPassword()">重置用户密码</button>
-      <div class="muted" style="margin-top:8px">重置后，该用户当前登录设备会被自动退出。</div>
-    </div>
-
-    <button style="width:100%;margin-top:12px" onclick="closeUserModal()">关闭</button>
-  </div>
-</div>
-
-<div id="adminSettingsModal" class="modal">
-  <div class="modal-card">
-    <div class="section-title">修改管理员账号 / 密码</div>
-    <input id="currentAdminPassword" type="password" placeholder="当前管理员密码">
-    <input id="newAdminUsername" style="margin-top:10px" placeholder="新管理员账号">
-    <input id="newAdminPassword" type="password" style="margin-top:10px" placeholder="新密码（不修改可留空）">
-    <button class="primary" style="width:100%;margin-top:12px" onclick="changeAdminCredentials()">保存修改</button>
-    <button style="width:100%;margin-top:10px" onclick="closeAdminSettings()">取消</button>
   </div>
 </div>
 
 <script>
 const API="https://jerry123.834833904.workers.dev";
-const TOKEN_KEY="jerry_admin_panel_token";
-let selectedUser=null;
+const TOKEN_KEY="jerry_admin_token";
+const DEVICE_KEY="jerry_admin_device";
+let currentUserId="";
 
-function token(){return localStorage.getItem(TOKEN_KEY)||""}
-
-async function api(path,options={}){
-  const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
-  if(token())headers.Authorization=`Bearer ${token()}`;
-
-  const response=await fetch(API+path,{...options,headers});
-  const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
-
-  if(!response.ok||data.ok===false){
-    if(response.status===401)localStorage.removeItem(TOKEN_KEY);
-    throw new Error(data.error||`HTTP ${response.status}`);
-  }
-  return data;
+function deviceId(){
+  let id=localStorage.getItem(DEVICE_KEY);
+  if(!id){id=crypto.randomUUID?crypto.randomUUID():`admin-${Date.now()}-${Math.random().toString(16).slice(2)}`;localStorage.setItem(DEVICE_KEY,id)}
+  return id;
 }
-
-async function adminLogin(){
+function token(){return localStorage.getItem(TOKEN_KEY)||""}
+async function api(path,options={}){
+  const headers=Object.assign({"Content-Type":"application/json","X-Device-Id":deviceId()},options.headers||{});
+  if(token())headers.Authorization=`Bearer ${token()}`;
+  const r=await fetch(API+path,{...options,headers});
+  const d=await r.json().catch(()=>({ok:false,error:`HTTP ${r.status}`}));
+  if(!r.ok||d.ok===false)throw new Error(d.error||`HTTP ${r.status}`);
+  return d;
+}
+async function login(){
   try{
-    const username=document.getElementById("adminUsername").value.trim();
-    const password=document.getElementById("adminPassword").value;
-    const data=await api("/api/admin-panel/login",{
+    const username=document.getElementById("username").value.trim();
+    const password=document.getElementById("password").value;
+    if(!username||!password)throw new Error("请输入管理员账号和密码");
+
+    const d=await api("/api/admin/login",{
       method:"POST",
-      body:JSON.stringify({username,password})
+      body:JSON.stringify({username,password,deviceId:deviceId()})
     });
-    localStorage.setItem(TOKEN_KEY,data.token);
-    document.getElementById("currentAdmin").textContent=data.username;
-    showPanel();
+
+    if(d.user?.role!=="admin"){
+      localStorage.removeItem(TOKEN_KEY);
+      throw new Error("无管理员权限");
+    }
+
+    localStorage.setItem(TOKEN_KEY,d.token);
+    showAdmin();
     await loadUsers();
   }catch(e){alert(e.message)}
 }
-
-async function verifyAdmin(){
+function showAdmin(){document.getElementById("loginCard").classList.add("hidden");document.getElementById("adminPanel").classList.remove("hidden")}
+function showLogin(){document.getElementById("loginCard").classList.remove("hidden");document.getElementById("adminPanel").classList.add("hidden")}
+async function verify(){
   if(!token())return showLogin();
-  try{
-    const data=await api("/api/admin-panel/me");
-    document.getElementById("currentAdmin").textContent=data.username;
-    showPanel();
-    loadUsers();
-  }catch{
-    showLogin();
-  }
+  try{const d=await api("/api/me");if(d.user?.role!=="admin")throw new Error("无管理员权限");showAdmin();loadUsers()}catch(e){localStorage.removeItem(TOKEN_KEY);showLogin()}
 }
-
-function showPanel(){
-  document.getElementById("loginCard").classList.add("hidden");
-  document.getElementById("panel").classList.remove("hidden");
-}
-
-function showLogin(){
-  document.getElementById("loginCard").classList.remove("hidden");
-  document.getElementById("panel").classList.add("hidden");
-}
-
-function adminLogout(){
-  localStorage.removeItem(TOKEN_KEY);
-  showLogin();
-}
-
-async function loadUsers(){
+async function loadUsers(clear=false){
+  if(clear)document.getElementById("search").value="";
   try{
     const q=encodeURIComponent(document.getElementById("search").value.trim());
-    const data=await api("/api/admin-panel/users?q="+q);
+    const d=await api("/api/admin/users?q="+q);
     const box=document.getElementById("users");
+    if(!d.items.length){box.innerHTML='<div class="muted">没有找到用户</div>';return}
+    box.innerHTML=d.items.map(u=>`
+      <div class="user">
+        <div><div class="email">${esc(u.email||"-")}</div><div class="muted">${esc(u.name||"-")} · ${esc(u.id)}</div></div>
+        <div>${esc(u.role||"user")}</div>
+        <div class="balance">¥${Number(u.balance||0).toFixed(2)}</div>
+        <button onclick='openModal(${JSON.stringify(JSON.stringify({id:u.id,email:u.email,balance:u.balance}))})'>修改余额</button>
+      </div>`).join("");
+  }catch(e){alert(e.message)}
+}
+function openModal(raw){
+  const u=JSON.parse(raw);currentUserId=u.id;
+  document.getElementById("modalTitle").textContent=`修改余额（当前 ¥${Number(u.balance||0).toFixed(2)}）`;
+  document.getElementById("modalEmail").textContent=u.email||"";
+  document.getElementById("value").value="";
+  document.getElementById("note").value="";
+  document.getElementById("modal").classList.add("show");
+}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+async function submitBalance(){
+  const mode=document.getElementById("mode").value;
+  const value=Number(document.getElementById("value").value);
+  const note=document.getElementById("note").value.trim();
+  if(!Number.isFinite(value))return alert("请输入金额");
+  if(!confirm(`确认${mode==="set"?"设置":"调整"}该用户余额？`))return;
+  try{
+    const d=await api("/api/admin/balance-adjust",{method:"POST",body:JSON.stringify({userId:currentUserId,mode,value,note})});
+    alert(`修改成功\\n原余额：¥${Number(d.oldBalance).toFixed(2)}\\n变动：¥${Number(d.delta).toFixed(2)}\\n新余额：¥${Number(d.newBalance).toFixed(2)}`);
+    closeModal();loadUsers();
+  }catch(e){alert(e.message)}
+}
 
-    if(!data.items.length){
-      box.innerHTML='<div class="muted">没有找到用户</div>';
+function showAllChats(){
+  document.getElementById("usersCard").classList.add("hidden");
+  document.getElementById("allChatsCard").classList.remove("hidden");
+  loadAllChats();
+}
+
+function showUsersPanel(){
+  document.getElementById("allChatsCard").classList.add("hidden");
+  document.getElementById("usersCard").classList.remove("hidden");
+}
+
+async function loadAllChats(){
+  try{
+    const q=encodeURIComponent(String(document.getElementById("allChatsSearch").value||"").trim());
+    const data=await api(`/api/admin/chat-history?q=${q}&limit=1000`);
+    const box=document.getElementById("allChatsList");
+    const items=data.items||[];
+
+    if(!items.length){
+      box.innerHTML='<div class="muted">没有找到聊天记录。请确认客户已经使用新版前端并登录过，旧版本本地聊天会在客户打开新版后自动同步。</div>';
       return;
     }
 
-    box.innerHTML=data.items.map(user=>`
-      <div class="user">
-        <div>
-          <div class="email">${escapeHtml(user.email||"-")}</div>
-          <div class="muted">${escapeHtml(user.name||"-")}<br>${escapeHtml(user.id)}</div>
+    box.innerHTML=items.map(item=>`
+      <div style="padding:12px 0;border-bottom:1px solid #eee">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <strong>${esc(item.user_email||"-")}</strong>
+          <span class="muted">${esc(item.created_at||"")}</span>
         </div>
-        <div>${escapeHtml(user.role||"user")}</div>
-        <div class="balance">¥${Number(user.balance||0).toFixed(2)}</div>
-        <div class="actions">
-          <button class="small primary" onclick='openUserModal(${JSON.stringify(JSON.stringify(user))},"balance")'>管理额度</button>
-          <button class="small" onclick='openUserModal(${JSON.stringify(JSON.stringify(user))},"password")'>重置密码</button>
-        </div>
+        <div class="muted" style="margin-top:4px">${item.role==="user"?"用户":"AI"} · ${esc(item.model||"")}</div>
+        <div style="white-space:pre-wrap;line-height:1.6;margin-top:7px">${esc(item.content||"")}</div>
       </div>
     `).join("");
-  }catch(e){alert(e.message)}
+  }catch(error){
+    alert(error.message);
+  }
 }
 
-function clearSearch(){
-  document.getElementById("search").value="";
-  loadUsers();
+async function logout(){
+  try{if(token())await api("/api/auth/logout",{method:"POST",body:JSON.stringify({deviceId:deviceId()})})}catch{}
+  localStorage.removeItem(TOKEN_KEY);showLogin();
 }
-
-function openUserModal(raw,tab){
-  selectedUser=JSON.parse(raw);
-  document.getElementById("userModalTitle").textContent=`管理用户 · 当前额度 ¥${Number(selectedUser.balance||0).toFixed(2)}`;
-  document.getElementById("userModalEmail").textContent=selectedUser.email||"";
-  document.getElementById("balanceValue").value="";
-  document.getElementById("balanceNote").value="";
-  document.getElementById("newUserPassword").value="";
-  switchUserTab(tab);
-  document.getElementById("userModal").classList.add("show");
-}
-
-function closeUserModal(){
-  document.getElementById("userModal").classList.remove("show");
-  selectedUser=null;
-}
-
-function switchUserTab(tab){
-  const balance=tab==="balance";
-  document.getElementById("balanceTab").classList.toggle("active",balance);
-  document.getElementById("passwordTab").classList.toggle("active",!balance);
-  document.getElementById("balanceSection").classList.toggle("hidden",!balance);
-  document.getElementById("passwordSection").classList.toggle("hidden",balance);
-}
-
-async function submitBalance(){
-  if(!selectedUser)return;
-  const mode=document.getElementById("balanceMode").value;
-  const value=Number(document.getElementById("balanceValue").value);
-  const note=document.getElementById("balanceNote").value.trim();
-
-  if(!Number.isFinite(value))return alert("请输入正确额度");
-
-  try{
-    const data=await api("/api/admin-panel/balance-adjust",{
-      method:"POST",
-      body:JSON.stringify({
-        userId:selectedUser.id,
-        mode,
-        value,
-        note
-      })
-    });
-
-    alert(
-      `修改成功\n原额度：¥${Number(data.oldBalance).toFixed(2)}\n`+
-      `本次变化：¥${Number(data.delta).toFixed(2)}\n`+
-      `最新额度：¥${Number(data.newBalance).toFixed(2)}`
-    );
-
-    closeUserModal();
-    loadUsers();
-  }catch(e){alert(e.message)}
-}
-
-async function resetUserPassword(){
-  if(!selectedUser)return;
-  const newPassword=document.getElementById("newUserPassword").value;
-
-  if(newPassword.length<8)return alert("用户新密码至少8位");
-  if(!confirm(`确认重置 ${selectedUser.email} 的密码？`))return;
-
-  try{
-    const data=await api("/api/admin-panel/reset-user-password",{
-      method:"POST",
-      body:JSON.stringify({
-        userId:selectedUser.id,
-        newPassword
-      })
-    });
-    alert(data.message||"密码已重置");
-    closeUserModal();
-  }catch(e){alert(e.message)}
-}
-
-function openAdminSettings(){
-  document.getElementById("currentAdminPassword").value="";
-  document.getElementById("newAdminUsername").value=document.getElementById("currentAdmin").textContent||"Jerry";
-  document.getElementById("newAdminPassword").value="";
-  document.getElementById("adminSettingsModal").classList.add("show");
-}
-
-function closeAdminSettings(){
-  document.getElementById("adminSettingsModal").classList.remove("show");
-}
-
-async function changeAdminCredentials(){
-  const currentPassword=document.getElementById("currentAdminPassword").value;
-  const newUsername=document.getElementById("newAdminUsername").value.trim();
-  const newPassword=document.getElementById("newAdminPassword").value;
-
-  if(!currentPassword)return alert("请输入当前管理员密码");
-  if(!newUsername)return alert("请输入管理员账号");
-
-  try{
-    const data=await api("/api/admin-panel/change-credentials",{
-      method:"POST",
-      body:JSON.stringify({
-        currentPassword,
-        newUsername,
-        newPassword
-      })
-    });
-
-    alert(data.message);
-    localStorage.removeItem(TOKEN_KEY);
-    closeAdminSettings();
-    document.getElementById("adminUsername").value=data.username;
-    document.getElementById("adminPassword").value="";
-    showLogin();
-  }catch(e){alert(e.message)}
-}
-
-function escapeHtml(value){
-  return String(value??"").replace(/[&<>"']/g,ch=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  }[ch]));
-}
-
-verifyAdmin();
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+verify();
 </script>
 </body>
 </html>

@@ -40,6 +40,7 @@ button{cursor:pointer}.primary{background:#111;color:#fff;border-color:#111}.dan
         <button onclick="loadUsers()">搜索用户</button>
         <button onclick="loadUsers(true)">刷新</button>
         <button onclick="showAllChats()">查看全部聊天记录</button>
+        <button onclick="openAdminPasswordModal()">修改管理员密码</button>
         <button onclick="logout()">退出</button>
       </div>
     </div>
@@ -63,6 +64,9 @@ button{cursor:pointer}.primary{background:#111;color:#fff;border-color:#111}.dan
   <div class="modal-card">
     <h3 id="modalTitle">修改余额</h3>
     <div class="muted" id="modalEmail"></div>
+    <div style="margin-top:8px;padding:10px 12px;border:1px solid #eee;border-radius:12px;background:#fafafa">
+      当前登录密码：<strong id="modalCurrentPassword">-</strong>
+    </div>
     <div class="row" style="margin-top:14px">
       <select id="mode">
         <option value="adjust">增加 / 扣除金额</option>
@@ -73,7 +77,27 @@ button{cursor:pointer}.primary{background:#111;color:#fff;border-color:#111}.dan
     <input id="note" style="width:100%;margin-top:10px" placeholder="备注，例如：支付宝充值 50 元">
     <div class="row" style="margin-top:14px">
       <button onclick="closeModal()">取消</button>
-      <button class="primary" onclick="submitBalance()">确认修改</button>
+      <button class="primary" onclick="submitBalance()">确认修改余额</button>
+    </div>
+
+    <hr style="border:0;border-top:1px solid #eee;margin:20px 0">
+    <h3>重置客户登录密码</h3>
+    <div class="muted" style="margin-bottom:10px">出于安全原因，现有密码是加密保存的，任何人都无法查看原密码；管理员只能重置新密码。</div>
+    <input id="resetUserPassword" type="password" style="width:100%" placeholder="输入新的客户密码（至少8位）">
+    <button class="danger" style="margin-top:10px;width:100%" onclick="resetUserPassword()">重置客户密码</button>
+  </div>
+</div>
+
+
+<div id="adminPasswordModal" class="modal">
+  <div class="modal-card">
+    <h3>修改管理员密码</h3>
+    <input id="adminCurrentPassword" type="password" style="width:100%;margin-top:8px" placeholder="当前管理员密码">
+    <input id="adminNewPassword" type="password" style="width:100%;margin-top:10px" placeholder="新管理员密码（至少6位）">
+    <input id="adminNewPassword2" type="password" style="width:100%;margin-top:10px" placeholder="再次输入新密码">
+    <div class="row" style="margin-top:14px">
+      <button onclick="closeAdminPasswordModal()">取消</button>
+      <button class="primary" onclick="changeAdminPassword()">确认修改</button>
     </div>
   </div>
 </div>
@@ -134,19 +158,28 @@ async function loadUsers(clear=false){
     if(!d.items.length){box.innerHTML='<div class="muted">没有找到用户</div>';return}
     box.innerHTML=d.items.map(u=>`
       <div class="user">
-        <div><div class="email">${esc(u.email||"-")}</div><div class="muted">${esc(u.name||"-")} · ${esc(u.id)}</div></div>
+        <div>
+          <div class="email">${esc(u.email||"-")}</div>
+          <div class="muted">${esc(u.name||"-")} · ${esc(u.id)}</div>
+          <div class="muted" style="margin-top:4px">登录密码：<strong>${esc(u.password_plain||"旧账号无法恢复，请重置")}</strong></div>
+        </div>
         <div>${esc(u.role||"user")}</div>
         <div class="balance">¥${Number(u.balance||0).toFixed(2)}</div>
-        <button onclick='openModal(${JSON.stringify(JSON.stringify({id:u.id,email:u.email,balance:u.balance}))})'>修改余额</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick='openUserChats(${JSON.stringify(JSON.stringify({id:u.id,email:u.email,name:u.name}))})'>查看聊天</button>
+          <button onclick='openModal(${JSON.stringify(JSON.stringify({id:u.id,email:u.email,balance:u.balance,password_plain:u.password_plain||""}))})'>管理账号</button>
+        </div>
       </div>`).join("");
   }catch(e){alert(e.message)}
 }
 function openModal(raw){
   const u=JSON.parse(raw);currentUserId=u.id;
-  document.getElementById("modalTitle").textContent=`修改余额（当前 ¥${Number(u.balance||0).toFixed(2)}）`;
+  document.getElementById("modalTitle").textContent=`管理账号（当前余额 ¥${Number(u.balance||0).toFixed(2)}）`;
   document.getElementById("modalEmail").textContent=u.email||"";
+  document.getElementById("modalCurrentPassword").textContent=u.password_plain||"旧账号无法恢复，请先重置密码";
   document.getElementById("value").value="";
   document.getElementById("note").value="";
+  document.getElementById("resetUserPassword").value="";
   document.getElementById("modal").classList.add("show");
 }
 function closeModal(){document.getElementById("modal").classList.remove("show")}
@@ -163,9 +196,29 @@ async function submitBalance(){
   }catch(e){alert(e.message)}
 }
 
+
+function openUserChats(raw){
+  const u=JSON.parse(raw);
+  document.getElementById("usersCard").classList.add("hidden");
+  document.getElementById("allChatsCard").classList.remove("hidden");
+
+  const search=document.getElementById("allChatsSearch");
+  search.value=u.email||"";
+  search.dataset.userId=u.id||"";
+
+  const tip=document.querySelector("#allChatsCard .muted");
+  if(tip)tip.textContent=`正在查看 ${u.email||u.name||u.id} 的全部聊天记录`;
+
+  loadAllChats(u.id);
+}
+
 function showAllChats(){
   document.getElementById("usersCard").classList.add("hidden");
   document.getElementById("allChatsCard").classList.remove("hidden");
+  const search=document.getElementById("allChatsSearch");
+  search.dataset.userId="";
+  const tip=document.querySelector("#allChatsCard .muted");
+  if(tip)tip.textContent="管理员可以查看所有登录邮箱保存的聊天记录。";
   loadAllChats();
 }
 
@@ -174,15 +227,21 @@ function showUsersPanel(){
   document.getElementById("usersCard").classList.remove("hidden");
 }
 
-async function loadAllChats(){
+async function loadAllChats(userId=""){
   try{
-    const q=encodeURIComponent(String(document.getElementById("allChatsSearch").value||"").trim());
-    const data=await api(`/api/admin/chat-history?q=${q}&limit=1000`);
+    const search=document.getElementById("allChatsSearch");
+    const selectedUserId=userId||search.dataset.userId||"";
+    const q=encodeURIComponent(String(search.value||"").trim());
+    const url=selectedUserId
+      ? `/api/admin/chat-history?userId=${encodeURIComponent(selectedUserId)}&limit=2000`
+      : `/api/admin/chat-history?q=${q}&limit=1000`;
+
+    const data=await api(url);
     const box=document.getElementById("allChatsList");
     const items=data.items||[];
 
     if(!items.length){
-      box.innerHTML='<div class="muted">没有找到聊天记录。请确认客户已经使用新版前端并登录过，旧版本本地聊天会在客户打开新版后自动同步。</div>';
+      box.innerHTML='<div class="muted">没有找到聊天记录</div>';
       return;
     }
 
@@ -192,12 +251,60 @@ async function loadAllChats(){
           <strong>${esc(item.user_email||"-")}</strong>
           <span class="muted">${esc(item.created_at||"")}</span>
         </div>
-        <div class="muted" style="margin-top:4px">${item.role==="user"?"用户":"AI"} · ${esc(item.model||"")}</div>
+        <div class="muted" style="margin-top:4px"><strong>${item.role==="user"?"用户发送":"AI回复"}</strong> · ${esc(item.model||"")}</div>
         <div style="white-space:pre-wrap;line-height:1.6;margin-top:7px">${esc(item.content||"")}</div>
       </div>
     `).join("");
   }catch(error){
     alert(error.message);
+  }
+}
+
+async function resetUserPassword(){
+  const newPassword=document.getElementById("resetUserPassword").value;
+  if(newPassword.length<8)return alert("客户新密码至少8位");
+  if(!confirm("确认重置这个客户的登录密码？重置后该客户当前登录设备会被退出。"))return;
+
+  try{
+    const d=await api("/api/admin/user-password-reset",{
+      method:"POST",
+      body:JSON.stringify({userId:currentUserId,newPassword})
+    });
+    alert(d.message||"密码重置成功");
+    document.getElementById("modalCurrentPassword").textContent=newPassword;
+    document.getElementById("resetUserPassword").value="";
+    loadUsers();
+  }catch(e){
+    alert(e.message);
+  }
+}
+
+function openAdminPasswordModal(){
+  document.getElementById("adminCurrentPassword").value="";
+  document.getElementById("adminNewPassword").value="";
+  document.getElementById("adminNewPassword2").value="";
+  document.getElementById("adminPasswordModal").classList.add("show");
+}
+function closeAdminPasswordModal(){
+  document.getElementById("adminPasswordModal").classList.remove("show");
+}
+async function changeAdminPassword(){
+  const currentPassword=document.getElementById("adminCurrentPassword").value;
+  const newPassword=document.getElementById("adminNewPassword").value;
+  const newPassword2=document.getElementById("adminNewPassword2").value;
+
+  if(newPassword.length<6)return alert("管理员新密码至少6位");
+  if(newPassword!==newPassword2)return alert("两次输入的新密码不一致");
+
+  try{
+    const d=await api("/api/admin/change-password",{
+      method:"POST",
+      body:JSON.stringify({currentPassword,newPassword})
+    });
+    alert(d.message||"管理员密码修改成功");
+    closeAdminPasswordModal();
+  }catch(e){
+    alert(e.message);
   }
 }
 

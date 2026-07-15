@@ -1,480 +1,350 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>ATW串焊机4级解锁 - 专业高准版</title>
-  <style>
-    :root{
-      --bg:#f5f5f7; --ink:#111; --muted:#8e8e93; --card:#fff; --border:#e5e5ea; --btnbg:#e9e9ec; --highlight:#16a34a;
-      /* 扫描框/视频显示尺寸（仅影响显示，不影响取流清晰度）*/
-      --scan-w: 320px;
-      --scan-h: 200px;
-    }
-    html,body{height:100%;}
-    body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font:17px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
-    }
-    .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:env(safe-area-inset-top) 16px 40px}
-    .topbar{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-    #luggageBtn{border:1px solid var(--border); border-radius:10px; background:var(--btnbg); padding:8px 12px; cursor:pointer; font-size:15px;color:#007aff;}
-    .card{
-      width:100%; max-width:640px; background:var(--card); border:1px solid var(--border);
-      border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.06); padding:24px 20px; margin-top:12px; text-align:center;
-    }
-    .title{font-weight:800; font-size:22px; margin:0 0 14px}
-    .input-row{margin:14px auto 10px; width:min(460px,100%)}
-    input[type="text"]{
-      width:100%; border:1px solid var(--border); border-radius:12px; padding:12px 14px; outline:none; font-size:16px; background:#fff; text-align:center;
-    }
-    .btn-wide{
-      width:min(460px,100%); border:1px solid var(--border); border-radius:12px; background:var(--btnbg);
-      padding:14px 16px; cursor:pointer; font-size:16px; font-weight:700; margin:8px auto 0; display:block;color:#007aff;
-    }
-    .muted{color:var(--muted)}
-    .result{font-size:20px; font-weight:700; color:var(--highlight); min-height:1.6em; margin-top:14px}
-    .err{color:#e64d4d; min-height:1.2em; margin-top:8px}
-    .footer{max-width:720px; color:#e64d4d; font-size:13px; text-align:center; margin-top:18px}
-
-    .cam-panel{
-      width:min(640px,100%); background:#fff; border:1px solid var(--border);
-      border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.06); padding:12px; margin-top:12px;
-    }
-    .cam-row{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px;}
-
-    /* —— 让视频预览“等于扫描框大小” —— */
-.video-wrap{
-      position:relative;
-      width:min(var(--scan-w), 92vw);
-      height:calc(var(--scan-h) * min(1, 92vw / var(--scan-w))); /* 移动端等比缩放 */
-      min-width:260px;     /* 保底，避免极窄布局为 0 宽 */
-      min-height:160px;    /* 保底，避免高度为 0 */
-      margin:0 auto;
-      border-radius:12px;
-      overflow:hidden;
-      border:1px solid var(--border);
-      background:#000;
-    }
-    /* 如需固定比例而不是固定高宽：
-       .video-wrap{ aspect-ratio: 16 / 10; width:min(360px, 92vw); } */
-
-    video, canvas.preview{
-      position:absolute; left:0; top:0;
-      width:100%; height:100%;
-      object-fit:cover; display:block; /* 裁切铺满“小框”，不拉伸 */
-      border-radius:12px;
-      background:#000;
-    }
-    canvas#guide{
-      position:absolute; left:0; top:0; width:100%; height:100%;
-      pointer-events:none; border-radius:12px;
-    }
-
-    .live{font-size:16px; color:#222; text-align:center; margin:8px 0 0;}
-    .live b{font-variant-numeric: tabular-nums;}
-    .note{font-size:13px; color:#666; margin-top:6px}
-    #fileInput{ position:fixed; left:-9999px; top:0; width:1px; height:1px; opacity:0; pointer-events:auto; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jerry AI 管理后台</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f6f7f9;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial}
+button,input,select{font:inherit}
+.wrap{max-width:1100px;margin:auto;padding:22px}
+h1{margin:0 0 18px;font-size:30px}
+.card{background:#fff;border:1px solid #e3e5e8;border-radius:18px;padding:18px;margin-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:180px}
+input,select{width:100%;border:1px solid #d8dce3;border-radius:12px;padding:12px;background:#fff}
+button{border:1px solid #d8dce3;background:#fff;border-radius:12px;padding:11px 15px;cursor:pointer}
+button.primary{background:#111;color:#fff;border-color:#111}
+button.danger{background:#b42318;color:#fff;border-color:#b42318}
+button.small{padding:8px 10px;font-size:13px}
+.muted{color:#6b7280;font-size:13px;line-height:1.6}
+.hidden{display:none}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+.toolbar input{min-width:260px;flex:1}
+.user{display:grid;grid-template-columns:minmax(220px,2fr) 100px 120px 280px;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #eee}
+.user:last-child{border-bottom:0}
+.email{font-weight:750;word-break:break-all}
+.balance{font-weight:850;font-size:18px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal.show{display:flex}
+.modal-card{background:#fff;width:min(560px,100%);max-height:90vh;overflow:auto;border-radius:20px;padding:20px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1}
+.tab.active{background:#111;color:#fff;border-color:#111}
+.section-title{font-size:20px;font-weight:800;margin:0 0 12px}
+@media(max-width:820px){
+  .user{grid-template-columns:1fr}
+  .wrap{padding:12px}
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div id="now" class="muted"></div>
-      <div><button id="luggageBtn">🧳 Luggage</button></div>
+<div class="wrap">
+  <h1>Jerry AI 管理后台</h1>
+
+  <div id="loginCard" class="card">
+    <div class="section-title">管理员登录</div>
+    <div class="row">
+      <input id="adminUsername" value="Jerry" placeholder="管理员账号">
+      <input id="adminPassword" type="password" value="123456" placeholder="管理员密码">
+    </div>
+    <button class="primary" style="margin-top:12px" onclick="adminLogin()">登录</button>
+    <div class="muted" style="margin-top:10px">
+      初始账号：Jerry　初始密码：123456。首次登录后请立即修改。
+    </div>
+  </div>
+
+  <div id="panel" class="hidden">
+    <div class="card topbar">
+      <div>
+        <div style="font-weight:800">当前管理员：<span id="currentAdmin">Jerry</span></div>
+        <div class="muted">可管理用户额度、重置用户密码、修改管理员账号和密码。</div>
+      </div>
+      <div class="actions">
+        <button onclick="openAdminSettings()">修改管理员账号/密码</button>
+        <button onclick="adminLogout()">退出</button>
+      </div>
     </div>
 
     <div class="card">
-      <h1 class="title" id="title">ATW串焊机4级解锁</h1>
-      <div class="input-row"><input id="sn" type="text" inputmode="numeric" autocomplete="off" placeholder="请输入5位序列号" /></div>
-      <button id="genBtn" class="btn-wide">生成密码</button>
-      <button id="ocrBtn" class="btn-wide">📷 拍照识别</button>
-      <button id="voiceBtn" class="btn-wide">🎤 语音识别</button>
-      <div id="err" class="err"></div>
-      <div id="res" class="result" data-raw-pwd=""></div>
-</div>
-
-    <div id="camPanel" class="cam-panel" hidden>
-      <div class="muted" id="camTitle">相机预览（若黑屏，请确保 HTTPS / 允许相机权限 / 非无痕模式）</div>
-      <div class="video-wrap">
-        <video id="preview" playsinline autoplay muted></video>
-        <canvas id="guide"></canvas>
+      <div class="toolbar">
+        <input id="search" placeholder="搜索用户邮箱、昵称或用户ID">
+        <button class="primary" onclick="loadUsers()">搜索</button>
+        <button onclick="clearSearch()">全部用户</button>
       </div>
-
-      <canvas id="frame" hidden></canvas>
-      <div class="live">实时识别：<b id="liveNum">—</b></div>
-      <div class="cam-row">
-        <button id="confirmEarly" class="btn-wide" style="max-width:210px;">提前确认</button>
-        <button id="snap" class="btn-wide" style="max-width:210px;">识别此帧</button>
-        <button id="pickImg" class="btn-wide" style="max-width:210px;">选择图片识别</button>
-        <button id="closeCam" class="btn-wide" style="max-width:210px;">关闭相机</button>
-      </div>
-      <div class="note">提示：把黑条/数字带放在高亮矩形内，稍微拉远并微微倾斜，能显著提升准确率。</div>
     </div>
 
-    <div id="foot" class="footer">此程序由奥特维王杰开发，请勿转发，如转发后果自负。</div>
+    <div class="card">
+      <div id="users"><div class="muted">正在加载用户...</div></div>
+    </div>
   </div>
+</div>
 
-  <input id="fileInput" type="file" accept="image/*" capture="environment" />
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<div id="userModal" class="modal">
+  <div class="modal-card">
+    <div class="section-title" id="userModalTitle">管理用户</div>
+    <div id="userModalEmail" class="muted"></div>
 
-  <script>
-    /* ===== 基础与文案 ===== */
-    const API_BASE="https://atwjerry.834833904.workers.dev";
-    const i18n={ zh:{
-        title:"奥特维串焊机4级解锁",placeholder:"请输入5位序列号",gen:"生成密码",ocr:"📷 拍照识别",voice:"🎤 语音识别",
-        resultPrefix:"密码是：",errNaN:"序列号必须是5位数字",errRange:"序列号范围为 00000 - 99999",errOCR:"识别失败，请靠近黑条并保持稳定",
-        errCam:"相机不可用：",errASRNo:"此浏览器不支持语音识别",errASR:"语音识别错误：",tipListening:"正在听…请说5位数字（中文）",
-        luggage:"🧳 Luggage",footer:"此程序由奥特维王杰开发，请勿转发，如转发后果自负。",camTitle:"相机预览（若黑屏，请确保 HTTPS / 允许权限 / 非无痕）",
-        confirm:"提前确认",snap:"识别此帧",pick:"选择图片识别",close:"关闭相机"
-      },
-      en:{
-        title:"ATW Stringer L4 Unlock",placeholder:"Enter 5-digit serial number",gen:"Generate Password",ocr:"📷 Scan via Camera",voice:"🎤 Speech Input",
-        resultPrefix:"Password: ",errNaN:"Serial number must be exactly 5 digits",errRange:"Valid range: 00000 - 99999",errOCR:"Recognition failed. Move closer and keep steady.",
-        errCam:"Camera error: ",errASRNo:"Speech recognition is not supported",errASR:"Speech recognition error: ",tipListening:"Listening… say five digits (English)",
-        luggage:"🧳 Luggage",footer:"Developed by ATW Jerry. Do not forward; you assume all consequences.",camTitle:"Camera preview (If black, ensure HTTPS/permission/not private)",
-        confirm:"Confirm Now",snap:"Recognize Frame",pick:"Pick Image",close:"Close Camera"
-      } }
-    let lang="zh";
+    <div class="tabs" style="margin-top:16px">
+      <button id="balanceTab" class="tab active" onclick="switchUserTab('balance')">管理额度</button>
+      <button id="passwordTab" class="tab" onclick="switchUserTab('password')">重置密码</button>
+    </div>
 
-    // 时钟
-    const nowEl=document.getElementById('now');
-    const pad=n=>String(n).padStart(2,'0');
-    setInterval(()=>{const d=new Date(); nowEl.textContent=`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;},1000);
+    <div id="balanceSection">
+      <div class="row">
+        <select id="balanceMode">
+          <option value="adjust">增加 / 扣除额度</option>
+          <option value="set">直接设置总额度</option>
+        </select>
+        <input id="balanceValue" type="number" step="0.01" placeholder="例如 100 或 -20">
+      </div>
+      <input id="balanceNote" style="margin-top:10px" placeholder="备注，例如：支付宝充值100元">
+      <button class="primary" style="width:100%;margin-top:12px" onclick="submitBalance()">确认修改额度</button>
+    </div>
 
-    // DOM
-const titleEl=document.getElementById('title'), sn=document.getElementById('sn'), genBtn=document.getElementById('genBtn');
-    const ocrBtn=document.getElementById('ocrBtn'), voiceBtn=document.getElementById('voiceBtn'), luggageBtn=document.getElementById('luggageBtn');
-    const foot=document.getElementById('foot'), err=document.getElementById('err'), res=document.getElementById('res');
-    const camPanel=document.getElementById('camPanel'), camTitle=document.getElementById('camTitle');
-    const preview=document.getElementById('preview'), frame=document.getElementById('frame'), guide=document.getElementById('guide');
-    const confirmEarly=document.getElementById('confirmEarly'), snap=document.getElementById('snap'), closeCam=document.getElementById('closeCam');
-    const pickImg=document.getElementById('pickImg'), fileInput=document.getElementById('fileInput'), liveNum=document.getElementById('liveNum');
+    <div id="passwordSection" class="hidden">
+      <input id="newUserPassword" type="password" placeholder="输入用户新密码，至少8位">
+      <button class="danger" style="width:100%;margin-top:12px" onclick="resetUserPassword()">重置用户密码</button>
+      <div class="muted" style="margin-top:8px">重置后，该用户当前登录设备会被自动退出。</div>
+    </div>
 
-    function applyI18n(){ const t=i18n[lang];
-      titleEl.textContent=t.title; sn.placeholder=t.placeholder; genBtn.textContent=t.gen; ocrBtn.textContent=t.ocr; voiceBtn.textContent=t.voice;
-      luggageBtn.textContent=t.luggage; foot.textContent=t.footer; camTitle.textContent=t.camTitle;
-      confirmEarly.textContent=t.confirm; snap.textContent=t.snap; pickImg.textContent=t.pick; closeCam.textContent=t.close;
-      if(res.dataset.rawPwd) res.textContent=t.resultPrefix+res.dataset.rawPwd;
-      document.documentElement.lang=(lang==='zh'?'zh-CN':'en'); liveNum.textContent='—';
-    }
+    <button style="width:100%;margin-top:12px" onclick="closeUserModal()">关闭</button>
+  </div>
+</div>
 
-    // 计算
-    async function compute(){
-      err.textContent='';
-      const t=i18n[lang]; const raw=(sn.value||'').trim();
-      if(!/^\d{5}$/.test(raw)){ err.textContent=t.errNaN; res.textContent=''; res.dataset.rawPwd=''; return;}
-      try{
-        const r=await fetch(`${API_BASE}/api/calc`,{method:"POST",headers:{"content-type":"application/json"},
-          body:JSON.stringify({sn:raw,clientEpochMs:Date.now(),tzOffsetMin:new Date().getTimezoneOffset()})});
-        const data=await r.json(); if(!r.ok) throw new Error(data?.error||("HTTP "+r.status));
-        res.dataset.rawPwd=data.pwd; res.textContent=t.resultPrefix+data.pwd;
-      }catch(e){ err.textContent=(lang==='zh'?'请求失败：':'Request failed: ')+(e?.message||e); res.dataset.rawPwd=''; res.textContent=''; }
-    }
-    sn.addEventListener('input',e=>{ e.target.value=e.target.value.replace(/\D/g,'').slice(0,5); });
-    genBtn.addEventListener('click',compute);
-    sn.addEventListener('keydown',e=>{ if(e.key==='Enter') compute(); });
-    luggageBtn.addEventListener('click',()=>{ lang=(lang==='zh'?'en':'zh'); applyI18n(); });
+<div id="adminSettingsModal" class="modal">
+  <div class="modal-card">
+    <div class="section-title">修改管理员账号 / 密码</div>
+    <input id="currentAdminPassword" type="password" placeholder="当前管理员密码">
+    <input id="newAdminUsername" style="margin-top:10px" placeholder="新管理员账号">
+    <input id="newAdminPassword" type="password" style="margin-top:10px" placeholder="新密码（不修改可留空）">
+    <button class="primary" style="width:100%;margin-top:12px" onclick="changeAdminCredentials()">保存修改</button>
+    <button style="width:100%;margin-top:10px" onclick="closeAdminSettings()">取消</button>
+  </div>
+</div>
 
-    /* ===== 图像处理 / OCR ===== */
-    const toGray=(r,g,b)=>0.299*r + 0.587*g + 0.114*b;
-    function findDarkBandWithRect(ctx){
-      const {width:w,height:h} = ctx.canvas;
-      const rowStep=Math.max(1,Math.floor(h/200)), bandH=Math.max(12,Math.floor(h*0.10));
-      const id=ctx.getImageData(0,0,w,h).data;
-      let bestY=0,best=-1e9;
-      for(let y=0;y<h-bandH;y+=rowStep){
-        let m=0, s2=0, cnt=0;
-        for(let yy=y; yy<y+bandH; yy+=rowStep){
-          for(let x=0; x<w; x+=4){
-            const j=(yy*w+x)*4; const g=toGray(id[j],id[j+1],id[j+2]); m+=g; s2+=g*g; cnt++;
-          }
-        }
-        m/=cnt; const varv=s2/cnt - m*m; const score=-m+Math.sqrt(Math.max(0,varv));
-        if(score>best){best=score;bestY=y;}
+<script>
+const API="https://jerry123.834833904.workers.dev";
+const TOKEN_KEY="jerry_admin_panel_token";
+let selectedUser=null;
+
+function token(){return localStorage.getItem(TOKEN_KEY)||""}
+
+async function api(path,options={}){
+  const headers=Object.assign({"Content-Type":"application/json"},options.headers||{});
+  if(token())headers.Authorization=`Bearer ${token()}`;
+
+  const response=await fetch(API+path,{...options,headers});
+  const data=await response.json().catch(()=>({ok:false,error:`HTTP ${response.status}`}));
+
+  if(!response.ok||data.ok===false){
+    if(response.status===401)localStorage.removeItem(TOKEN_KEY);
+    throw new Error(data.error||`HTTP ${response.status}`);
+  }
+  return data;
 }
-      const x=Math.floor(w*0.10), cw=Math.floor(w*0.80);
-      const y=Math.max(0,Math.min(h-bandH,bestY-Math.floor(bandH*0.15)));
-      const ch=Math.min(h-y,Math.floor(bandH*1.35));
-      const roi=ctx.getImageData(x,y,cw,ch);
-      const cv=document.createElement('canvas'); cv.width=cw; cv.height=ch; cv.getContext('2d').putImageData(roi,0,0);
-      return { canvas: cv, rect:{x,y,w:cw,h:ch}, full:{w,h} };
-    }
-    function median3(ctx){
-      const {width:w,height:h}=ctx.canvas; const id=ctx.getImageData(0,0,w,h); const d=id.data; const out=new Uint8ClampedArray(d.length);
-      for(let y=1;y<h-1;y++){
-        for(let x=1;x<w-1;x++){
-          const arrR=[],arrG=[],arrB=[];
-          for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++){
-            const k=((y+j)*w+(x+i))*4; arrR.push(d[k]); arrG.push(d[k+1]); arrB.push(d[k+2]);
-          }
-          arrR.sort((a,b)=>a-b); arrG.sort((a,b)=>a-b); arrB.sort((a,b)=>a-b);
-          const o=(y*w+x)*4; out[o]=arrR[4]; out[o+1]=arrG[4]; out[o+2]=arrB[4]; out[o+3]=255;
-        }
-      }
-      id.data.set(out); ctx.putImageData(id,0,0);
-    }
-    function otsuBinarize(ctx,invert=true){
-      const {width:w,height:h}=ctx.canvas; const id=ctx.getImageData(0,0,w,h); const d=id.data;
-      const hist=new Array(256).fill(0); let total=0;
-      for(let i=0;i<d.length;i+=4){ const g=Math.round(toGray(d[i],d[i+1],d[i+2])); hist[g]++; total++; }
-      let sum=0; for(let t=0;t<256;t++) sum+=t*hist[t];
-      let sumB=0,wB=0,maxVar=-1,th=127;
-      for(let t=0;t<256;t++){ wB+=hist[t]; if(!wB) continue; const wF=total-wB; if(!wF) break; sumB+=t*hist[t]; const mB=sumB/wB, mF=(sum-sumB)/wF; const between=wB*wF*(mB-mF)*(mB-mF); if(between>maxVar){maxVar=between; th=t;} }
-      for(let i=0;i<d.length;i+=4){ const g=toGray(d[i],d[i+1],d[i+2]); const v=g>th?255:0; const p=invert?255-v:v; d[i]=d[i+1]=d[i+2]=p; d[i+3]=255; }
-      ctx.putImageData(id,0,0);
-    }
-    function morphClose(ctx){
-      const {width:w,height:h}=ctx.canvas; const src=ctx.getImageData(0,0,w,h); const d=src.data;
-      const tmp=new Uint8ClampedArray(d.length);
-      function get(x,y,i,dw){ return i[(y*dw+x)<<2]; }
-      for(let y=1;y<h-1;y++){ for(let x=1;x<w-1;x++){
-        let v=255; for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++) v=Math.min(v,get(x+i,y+j,src.data,w));
-        const o=(y*w+x)<<2; tmp[o]=tmp[o+1]=tmp[o+2]=v; tmp[o+3]=255;
-}}
-      const id1=new ImageData(tmp,w,h); ctx.putImageData(id1,0,0);
-      const d2=ctx.getImageData(0,0,w,h).data; const out=new Uint8ClampedArray(d2.length);
-      function get2(x,y){ return d2[(y*w+x)<<2]; }
-      for(let y=1;y<h-1;y++){ for(let x=1;x<w-1;x++){
-        let v=0; for(let j=-1;j<=1;j++) for(let i=-1;i<=1;i++) v=Math.max(v,get2(x+i,y+j));
-        const o=(y*w+x)<<2; out[o]=out[o+1]=out[o+2]=v; out[o+3]=255;
-      }}
-      ctx.putImageData(new ImageData(out,w,h),0,0);
-    }
-    function upscale(cv,s=3){ const o=document.createElement('canvas'); o.width=Math.round(cv.width*s); o.height=Math.round(cv.height*s); const c=o.getContext('2d'); c.imageSmoothingEnabled=false; c.drawImage(cv,0,0,o.width,o.height); return o; }
-    function splitIntoFive(binaryCanvas){
-      const ctx=binaryCanvas.getContext('2d'); const {width:w,height:h}=binaryCanvas; const d=ctx.getImageData(0,0,w,h).data;
-      const colSum=new Array(w).fill(0);
-      for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ const i=(y*w+x)*4; if(d[i]===0) colSum[x]++; }}
-      const target=w/5; const cuts=[0];
-      for(let k=1;k<5;k++){
-        const center=Math.round(k*target); const L=Math.max(1,Math.round(center-target*0.12)); const R=Math.min(w-2,Math.round(center+target*0.12));
-        let bestX=L,bestV=1e9; for(let x=L;x<=R;x++){ if(colSum[x]<bestV){bestV=colSum[x]; bestX=x;} }
-        cuts.push(bestX);
-      }
-      cuts.push(w-1);
-      const parts=[];
-      for(let i=0;i<5;i++){
-        const x0=Math.max(0,Math.min(w-1,cuts[i]-2)); const x1=Math.max(0,Math.min(w-1,cuts[i+1]+2));
-        const cw=x1-x0+1; const ch=h;
-        const c=document.createElement('canvas'); c.width=cw; c.height=ch;
-        c.getContext('2d').drawImage(binaryCanvas,x0,0,cw,ch,0,0,cw,ch);
-        parts.push(c);
-      }
-      return parts;
-    }
-    async function ocrSingleDigit(cv){
-      const { data } = await Tesseract.recognize(cv.toDataURL(),'eng',{
-        tessedit_char_whitelist:'0123456789',
-        tessedit_pageseg_mode:10, classify_bln_numeric_mode:1,
-        load_system_dawg:0, load_freq_dawg:0
-      });
-      const text=(data.text||'').replace(/\D/g,'').slice(0,1);
-      let conf=0;
-      if(data.symbols && data.symbols[0] && typeof data.symbols[0].confidence==='number'){
-        conf=data.symbols[0].confidence;
-      }else if(typeof data.confidence==='number'){ conf=data.confidence; }
-      return {ch:text, conf:conf||0};
-}
-    async function ocrLine(cv){
-      const candidates=[];
-      for(const psm of [7,8,13]){
-        const {data:{text}} = await Tesseract.recognize(cv.toDataURL(),'eng',{
-          tessedit_char_whitelist:'0123456789',
-          tessedit_pageseg_mode:psm, classify_bln_numeric_mode:1,
-          load_system_dawg:0, load_freq_dawg:0
-        });
-        const d=(text||'').replace(/\D+/g,'').slice(0,5);
-        if(d) candidates.push(d);
-      }
-      const freq={}; candidates.forEach(v=>freq[v]=(freq[v]||0)+1);
-      let best='',max=0; for(const k in freq){ if(freq[k]>max){max=freq[k]; best=k;} }
-      return best;
-    }
-    async function robustDigitOCR(roi){
-      const up=upscale(roi,3);
-      const ctx=up.getContext('2d',{willReadFrequently:true});
-      median3(ctx); otsuBinarize(ctx,true); morphClose(ctx);
-      const parts=splitIntoFive(up);
-      let ok=true, out='';
-      for(const p of parts){
-        const r=await ocrSingleDigit(p);
-        if(!r.ch || r.conf < 55){ ok=false; break; }
-        out+=r.ch;
-      }
-      if(ok && out.length===5) return out;
-      return await ocrLine(up);
-    }
 
-    /* ===== 相机 & 多帧投票 & 引导层 ===== */
-    let mediaStream=null, autoTimer=null, ocrBusy=false, lastRect=null;
-    const recent=[];
-    function pushVote(s){
-      if(!s||s.length!==5) return null;
-      recent.push(s); if(recent.length>7) recent.shift();
-      const cnt={}; recent.forEach(v=>cnt[v]=(cnt[v]||0)+1);
-      let best='',max=0,second=0; for(const k in cnt){ if(cnt[k]>max){second=max; max=cnt[k]; best=k;} else if(cnt[k]>second){second=cnt[k];} }
-      if(max>=3 && (max-second)>=1) return best;
-      return null;
-    }
-    function canUseGUM(){
-      const h=location.hostname||"";
-      const isLocal=/^(localhost|127\.0\.0\.1|::1|.+\.local)$/i.test(h);
-      return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && (window.isSecureContext || isLocal);
-    }
-    async function startCamera(){
-      if(!canUseGUM()){ err.textContent=i18n[lang].errCam+"非 HTTPS/localhost，或浏览器禁用了相机"; return false; }
-      try{
-        // 三档兜底：后置优先 → 任意摄像头 → 最宽松
-let constraints = { video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} }, audio:false };
-        let stream;
-        try { stream = await navigator.mediaDevices.getUserMedia(constraints); }
-        catch(e1){
-          try { stream = await navigator.mediaDevices.getUserMedia({ video:{ width:{ideal:1280}, height:{ideal:720} }, audio:false }); }
-          catch(e2){ stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); }
-        }
-
-        mediaStream=stream;
-        preview.srcObject=mediaStream;
-
-        await new Promise((res)=>{
-          const done=()=>res();
-          if(preview.readyState>=2) return res();
-          preview.onloadedmetadata=done; setTimeout(done, 1200);
-        });
-        await preview.play().catch(()=>{});
-
-        // 同步 guide 尺寸（与缩小后的可见尺寸一致）
-        const resizeGuide=()=>{
-          const w=preview.clientWidth || preview.offsetWidth || 320;
-          const h=preview.clientHeight || preview.offsetHeight || 200;
-          guide.width=w; guide.height=h;
-        };
-        resizeGuide(); new ResizeObserver(resizeGuide).observe(preview);
-        return true;
-      }catch(e){ err.textContent=i18n[lang].errCam+(e?.message||e); return false; }
-    }
-    function stopCamera(){
-      if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop()); mediaStream=null;}
-      preview.srcObject=null;
-      if(autoTimer){clearInterval(autoTimer); autoTimer=null;}
-      ocrBusy=false; recent.length=0; liveNum.textContent='—';
-      guide.getContext('2d').clearRect(0,0,guide.width,guide.height); lastRect=null;
-    }
-   function drawGuide(rect, fullW, fullH){
-  if(!guide.width || !guide.height || !rect) return;
-  const g=guide.getContext('2d');
-  g.clearRect(0,0,guide.width,guide.height);
-
-  // 映射原始坐标 → 缩小显示坐标
-  const sx=guide.width/fullW, sy=guide.height/fullH;
-  let x=rect.x*sx, y=rect.y*sy, w=rect.w*sx, h=rect.h*sy;
-
-  // ★ 放大扫描框（比如放大 1.5 倍，可调节）
-  const scale=1.5;
-  const cx=x+w/2, cy=y+h/2;
-  w*=scale; h*=scale;
-  x=cx-w/2; y=cy-h/2;
-
-  // 限制在画布范围内
-  if(x<0) x=0;
-  if(y<0) y=0;
-  if(x+w>guide.width) w=guide.width-x;
-  if(y+h>guide.height) h=guide.height-y;
-
-  // 半透明遮罩 + 高亮大框
-  g.fillStyle='rgba(0,0,0,0.25)';
-  g.fillRect(0,0,guide.width,guide.height);
-  g.clearRect(x,y,w,h);
-  g.lineWidth=3;           // 线条粗一点
-  g.setLineDash([10,6]);   // 虚线更明显
-  g.strokeStyle='rgba(255,255,255,0.95)';
-  g.strokeRect(x+1,y+1,w-2,h-2);
-}
-    async function captureAndRecognizeOnce(){
-      if(!(preview.videoWidth>0 && preview.videoHeight>0)) return null; // 未就绪早退
-      if(ocrBusy) return null; ocrBusy=true;
-try{
-        frame.width=preview.videoWidth; frame.height=preview.videoHeight;
-        const ctx=frame.getContext('2d',{willReadFrequently:true}); ctx.drawImage(preview,0,0,frame.width,frame.height);
-        const {canvas:roi,rect,full}=findDarkBandWithRect(ctx);
-        lastRect=rect; drawGuide(rect, full.w, full.h);
-        const digits=await robustDigitOCR(roi);
-        liveNum.textContent=digits||'—';
-        return digits;
-      } finally { ocrBusy=false; }
-    }
-    async function startAutoLoop(){
-      const ok=await startCamera(); if(!ok) return; err.textContent='';
-      autoTimer=setInterval(async ()=>{
-        const s=await captureAndRecognizeOnce();
-        const voted=pushVote(s);
-        if(voted){ sn.value=voted; await compute(); stopCamera(); camPanel.hidden=true; }
-      }, 900);
-    }
-    async function captureManual(){
-      if(mediaStream){
-        const s=await captureAndRecognizeOnce();
-        if(s&&s.length===5){ sn.value=s; await compute(); } else { err.textContent=i18n[lang].errOCR; }
-      }else{ await pickImageAndOCR(); }
-    }
-    async function pickImageAndOCR(){
-      fileInput.value=''; fileInput.click();
-      const imgURL=await new Promise(resolve=>{
-        fileInput.onchange=()=>{
-          if(fileInput.files && fileInput.files[0]){
-            const fr=new FileReader(); fr.onload=()=>resolve(fr.result); fr.readAsDataURL(fileInput.files[0]);
-          }else resolve(null);
-        };
-      });
-      if(!imgURL){ err.textContent=i18n[lang].errCam+'未选择图片'; return; }
-      const img=new Image(); img.src=imgURL; await img.decode();
-      const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight;
-      const cx=c.getContext('2d',{willReadFrequently:true}); cx.drawImage(img,0,0);
-      const {canvas:roi,rect,full}=findDarkBandWithRect(cx);
-      drawGuide(rect, full.w, full.h);
-      const digits=await robustDigitOCR(roi);
-      liveNum.textContent=digits||'—';
-      if(digits && digits.length===5){ sn.value=digits; await compute(); } else { err.textContent=i18n[lang].errOCR; }
-    }
-
-    // 事件绑定
-ocrBtn.addEventListener('click', async ()=>{ camPanel.hidden=false; await startAutoLoop(); });
-    confirmEarly.addEventListener('click', async ()=>{
-      const cur=(liveNum.textContent||'').replace(/\D/g,'');
-      if(cur.length===5){ sn.value=cur; await compute(); stopCamera(); camPanel.hidden=true; }
-      else{ err.textContent=i18n[lang].errNaN; }
+async function adminLogin(){
+  try{
+    const username=document.getElementById("adminUsername").value.trim();
+    const password=document.getElementById("adminPassword").value;
+    const data=await api("/api/admin-panel/login",{
+      method:"POST",
+      body:JSON.stringify({username,password})
     });
-    snap.addEventListener('click', captureManual);
-    pickImg.addEventListener('click', pickImageAndOCR);
-    closeCam.addEventListener('click', ()=>{ stopCamera(); camPanel.hidden=true; });
+    localStorage.setItem(TOKEN_KEY,data.token);
+    document.getElementById("currentAdmin").textContent=data.username;
+    showPanel();
+    await loadUsers();
+  }catch(e){alert(e.message)}
+}
 
-    /* ===== 语音识别（与打包版一致 + 稳健增强） ===== */
-    const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
-    function mapChineseDigitsToArabic(txt){ const map={'零':'0','〇':'0','○':'0','Ｏ':'0','０':'0','一':'1','幺':'1','二':'2','两':'2','三':'3','四':'4','五':'5','六':'6','七':'7','八':'8','九':'9'}; return txt.replace(/[零〇○Ｏ０一幺二两三四五六七八九]/g, ch=>map[ch]||ch); }
-    function mapEnglishDigitsToArabic(txt){ const words=[['zero','oh','o','owe','ohh'],['one'],['two','to','too'],['three'],['four','for'],['five'],['six'],['seven'],['eight','ate'],['nine']]; let s=(' '+(txt||'').toLowerCase().replace(/[-,._]/g,' ')+' ').replace(/\s+/g,' '); words.forEach((alts,d)=>alts.forEach(w=>{ s=s.replace(new RegExp('\\b'+w+'\\b','g'),' '+d+' ');} )); return s.replace(/\s+/g,' '); }
-    function pickFiveDigitsFromCandidates(cands, langIsZh){
-      for(const raw of cands){
-        const norm = langIsZh ? mapChineseDigitsToArabic(raw) : mapEnglishDigitsToArabic(raw);
-        const digits = (norm.match(/\d/g)||[]).join('').slice(0,5);
-        if(digits.length===5) return digits;
-      }
-      return '';
+async function verifyAdmin(){
+  if(!token())return showLogin();
+  try{
+    const data=await api("/api/admin-panel/me");
+    document.getElementById("currentAdmin").textContent=data.username;
+    showPanel();
+    loadUsers();
+  }catch{
+    showLogin();
+  }
+}
+
+function showPanel(){
+  document.getElementById("loginCard").classList.add("hidden");
+  document.getElementById("panel").classList.remove("hidden");
+}
+
+function showLogin(){
+  document.getElementById("loginCard").classList.remove("hidden");
+  document.getElementById("panel").classList.add("hidden");
+}
+
+function adminLogout(){
+  localStorage.removeItem(TOKEN_KEY);
+  showLogin();
+}
+
+async function loadUsers(){
+  try{
+    const q=encodeURIComponent(document.getElementById("search").value.trim());
+    const data=await api("/api/admin-panel/users?q="+q);
+    const box=document.getElementById("users");
+
+    if(!data.items.length){
+      box.innerHTML='<div class="muted">没有找到用户</div>';
+      return;
     }
-    voiceBtn.addEventListener('click',()=>{
-      const t=i18n[lang]; err.textContent=''; if(!SpeechRec){ err.textContent=t.errASRNo; return; }
-      const rec=new SpeechRec(); rec.interimResults=false; rec.maxAlternatives=8; rec.lang=(lang==='zh'?'zh-CN':'en-US'); try{ rec.start(); }catch(_){}
-      err.textContent=t.tipListening;
-      rec.onresult=async (ev)=>{ const alts=[]; for(let i=0;i<ev.results[0].length;i++){ alts.push(ev.results[0][i].transcript || ''); }
-        if(!alts.length && ev.results[0][0]?.transcript){ alts.push(ev.results[0][0].transcript); }
-        const digits = pickFiveDigitsFromCandidates(alts, lang==='zh');
-        if(digits){ sn.value=digits; err.textContent=''; await compute(); }
-        else{ const txt = ev.results[0][0]?.transcript || ''; err.textContent=t.errNaN+'（'+txt+'）'; }
-      };
-      rec.onerror=(e)=>{ err.textContent=t.errASR+(e?.error||e); };
+
+    box.innerHTML=data.items.map(user=>`
+      <div class="user">
+        <div>
+          <div class="email">${escapeHtml(user.email||"-")}</div>
+          <div class="muted">${escapeHtml(user.name||"-")}<br>${escapeHtml(user.id)}</div>
+        </div>
+        <div>${escapeHtml(user.role||"user")}</div>
+        <div class="balance">¥${Number(user.balance||0).toFixed(2)}</div>
+        <div class="actions">
+          <button class="small primary" onclick='openUserModal(${JSON.stringify(JSON.stringify(user))},"balance")'>管理额度</button>
+          <button class="small" onclick='openUserModal(${JSON.stringify(JSON.stringify(user))},"password")'>重置密码</button>
+        </div>
+      </div>
+    `).join("");
+  }catch(e){alert(e.message)}
+}
+
+function clearSearch(){
+  document.getElementById("search").value="";
+  loadUsers();
+}
+
+function openUserModal(raw,tab){
+  selectedUser=JSON.parse(raw);
+  document.getElementById("userModalTitle").textContent=`管理用户 · 当前额度 ¥${Number(selectedUser.balance||0).toFixed(2)}`;
+  document.getElementById("userModalEmail").textContent=selectedUser.email||"";
+  document.getElementById("balanceValue").value="";
+  document.getElementById("balanceNote").value="";
+  document.getElementById("newUserPassword").value="";
+  switchUserTab(tab);
+  document.getElementById("userModal").classList.add("show");
+}
+
+function closeUserModal(){
+  document.getElementById("userModal").classList.remove("show");
+  selectedUser=null;
+}
+
+function switchUserTab(tab){
+  const balance=tab==="balance";
+  document.getElementById("balanceTab").classList.toggle("active",balance);
+  document.getElementById("passwordTab").classList.toggle("active",!balance);
+  document.getElementById("balanceSection").classList.toggle("hidden",!balance);
+  document.getElementById("passwordSection").classList.toggle("hidden",balance);
+}
+
+async function submitBalance(){
+  if(!selectedUser)return;
+  const mode=document.getElementById("balanceMode").value;
+  const value=Number(document.getElementById("balanceValue").value);
+  const note=document.getElementById("balanceNote").value.trim();
+
+  if(!Number.isFinite(value))return alert("请输入正确额度");
+
+  try{
+    const data=await api("/api/admin-panel/balance-adjust",{
+      method:"POST",
+      body:JSON.stringify({
+        userId:selectedUser.id,
+        mode,
+        value,
+        note
+      })
     });
 
-    applyI18n();
-  </script>
+    alert(
+      `修改成功\n原额度：¥${Number(data.oldBalance).toFixed(2)}\n`+
+      `本次变化：¥${Number(data.delta).toFixed(2)}\n`+
+      `最新额度：¥${Number(data.newBalance).toFixed(2)}`
+    );
+
+    closeUserModal();
+    loadUsers();
+  }catch(e){alert(e.message)}
+}
+
+async function resetUserPassword(){
+  if(!selectedUser)return;
+  const newPassword=document.getElementById("newUserPassword").value;
+
+  if(newPassword.length<8)return alert("用户新密码至少8位");
+  if(!confirm(`确认重置 ${selectedUser.email} 的密码？`))return;
+
+  try{
+    const data=await api("/api/admin-panel/reset-user-password",{
+      method:"POST",
+      body:JSON.stringify({
+        userId:selectedUser.id,
+        newPassword
+      })
+    });
+    alert(data.message||"密码已重置");
+    closeUserModal();
+  }catch(e){alert(e.message)}
+}
+
+function openAdminSettings(){
+  document.getElementById("currentAdminPassword").value="";
+  document.getElementById("newAdminUsername").value=document.getElementById("currentAdmin").textContent||"Jerry";
+  document.getElementById("newAdminPassword").value="";
+  document.getElementById("adminSettingsModal").classList.add("show");
+}
+
+function closeAdminSettings(){
+  document.getElementById("adminSettingsModal").classList.remove("show");
+}
+
+async function changeAdminCredentials(){
+  const currentPassword=document.getElementById("currentAdminPassword").value;
+  const newUsername=document.getElementById("newAdminUsername").value.trim();
+  const newPassword=document.getElementById("newAdminPassword").value;
+
+  if(!currentPassword)return alert("请输入当前管理员密码");
+  if(!newUsername)return alert("请输入管理员账号");
+
+  try{
+    const data=await api("/api/admin-panel/change-credentials",{
+      method:"POST",
+      body:JSON.stringify({
+        currentPassword,
+        newUsername,
+        newPassword
+      })
+    });
+
+    alert(data.message);
+    localStorage.removeItem(TOKEN_KEY);
+    closeAdminSettings();
+    document.getElementById("adminUsername").value=data.username;
+    document.getElementById("adminPassword").value="";
+    showLogin();
+  }catch(e){alert(e.message)}
+}
+
+function escapeHtml(value){
+  return String(value??"").replace(/[&<>"']/g,ch=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[ch]));
+}
+
+verifyAdmin();
+</script>
 </body>
 </html>
